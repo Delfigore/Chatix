@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import MessageList from "./feed/MessageList";
 import ComposeModal from "./compose/ComposeModal";
 import BottomNav from "./navigation/BottomNav";
@@ -11,13 +12,11 @@ interface HomeProps {
   avatar?: string;
 }
 
-const Home = ({
-  username = "John Doe",
-  avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
-}: HomeProps) => {
+const Home = ({ username, avatar }: HomeProps) => {
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
+  const { profile } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -63,8 +62,8 @@ const Home = ({
       <SideDrawer
         isOpen={isSideDrawerOpen}
         onClose={() => setIsSideDrawerOpen(false)}
-        username={username}
-        avatar={avatar}
+        username={profile?.username}
+        avatar={profile?.avatar_url}
       />
     </div>
   );

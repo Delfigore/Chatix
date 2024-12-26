@@ -1,6 +1,7 @@
 import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 import { Avatar } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -26,6 +27,7 @@ const SideDrawer = ({
   username = "John Doe",
   avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
 }: SideDrawerProps) => {
+  const { signOut } = useAuth();
   const menuItems = [
     { icon: <User className="h-5 w-5" />, label: "Profile", href: "/profile" },
     {
@@ -99,6 +101,7 @@ const SideDrawer = ({
             <Button
               variant="ghost"
               className="w-full justify-start gap-4 text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={signOut}
             >
               <LogOut className="h-5 w-5" />
               <span>Log Out</span>
