@@ -6,6 +6,7 @@ import SignUpForm from "./components/auth/SignUpForm";
 import VerifyEmail from "./components/auth/VerifyEmail";
 import { AuthProvider, useAuth } from "./lib/auth";
 import routes from "tempo-routes";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -76,14 +77,22 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Suspense fallback={<p>Loading...</p>}>
-        <>
-          <AppRoutes />
-          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-        </>
-      </Suspense>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Suspense 
+          fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-pulse text-gray-600">Loading...</div>
+            </div>
+          }
+        >
+          <>
+            <AppRoutes />
+            {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+          </>
+        </Suspense>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
