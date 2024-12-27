@@ -2,21 +2,27 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { useNavigate } from "react-router-dom";
+import type { UserProfile, AuthError } from "@/types";
 
 type AuthContextType = {
   user: User | null;
-  profile: any | null;
+  profile: UserProfile | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    userData: Partial<UserProfile>,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -47,47 +53,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
+      if (error) throw error;
+
+      setProfile(data);
+    } catch (error) {
       console.error("Error fetching profile:", error);
-      return;
+      setProfile(null);
     }
-
-    setProfile(data);
   };
 
-  const signUp = async (email: string, password: string, userData: any) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData,
-      },
-    });
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    if (!user) throw new Error("No user logged in");
 
-    if (error) throw error;
-    navigate("/verify-email");
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update(data)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setProfile((prev) => (prev ? { ...prev, ...data } : null));
+    } catch (error) {
+      const authError = error as AuthError;
+      throw new Error(authError.message || "Failed to update profile");
+    }
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: Partial<UserProfile>,
+  ) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData,
+        },
+      });
+
+      if (error) throw error;
+      navigate("/verify-email");
+    } catch (error) {
+      const authError = error as AuthError;
+      throw new Error(authError.message || "Failed to sign up");
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) throw error;
-    navigate("/");
+      if (error) throw error;
+      navigate("/");
+    } catch (error) {
+      const authError = error as AuthError;
+      throw new Error(authError.message || "Failed to sign in");
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    navigate("/login");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/login");
+    } catch (error) {
+      const authError = error as AuthError;
+      throw new Error(authError.message || "Failed to sign out");
+    }
   };
 
   const value = {
@@ -97,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     loading,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

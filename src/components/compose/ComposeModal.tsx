@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { type FC, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,29 +14,50 @@ import { Card } from "@/components/ui/card";
 interface ComposeModalProps {
   open?: boolean;
   onClose?: () => void;
-  onSubmit?: (content: string, media: string[]) => void;
+  onSubmit?: (content: string, media: string[]) => Promise<void>;
+  maxLength?: number;
+  maxMedia?: number;
 }
 
-const ComposeModal = ({
+const ComposeModal: FC<ComposeModalProps> = ({
   open = true,
   onClose = () => {},
-  onSubmit = () => {},
-}: ComposeModalProps) => {
+  onSubmit = async () => {},
+  maxLength = 280,
+  maxMedia = 4,
+}) => {
   const [content, setContent] = useState("");
   const [media, setMedia] = useState<string[]>([
     "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=500&auto=format",
   ]);
-  const maxLength = 280;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit(content, media);
-    setContent("");
-    setMedia([]);
-    onClose();
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(content, media);
+      setContent("");
+      setMedia([]);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting message:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const removeMedia = (index: number) => {
     setMedia(media.filter((_, i) => i !== index));
+  };
+
+  const addMedia = () => {
+    if (media.length >= maxMedia) return;
+    setMedia([
+      ...media,
+      "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=500&auto=format",
+    ]);
   };
 
   return (
@@ -75,7 +96,7 @@ const ComposeModal = ({
                   </Button>
                   <img
                     src={url}
-                    alt="Uploaded content"
+                    alt={`Uploaded content ${index + 1}`}
                     className="w-full h-[200px] object-cover rounded-lg"
                   />
                 </Card>
@@ -88,13 +109,8 @@ const ComposeModal = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              setMedia([
-                ...media,
-                "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=500&auto=format",
-              ])
-            }
-            disabled={media.length >= 4}
+            onClick={addMedia}
+            disabled={media.length >= maxMedia}
           >
             <ImagePlus className="h-5 w-5" />
           </Button>
@@ -105,9 +121,11 @@ const ComposeModal = ({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={content.length === 0 && media.length === 0}
+              disabled={
+                isSubmitting || (content.length === 0 && media.length === 0)
+              }
             >
-              Post
+              {isSubmitting ? "Posting..." : "Post"}
             </Button>
           </div>
         </DialogFooter>

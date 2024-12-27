@@ -1,4 +1,4 @@
-import React from "react";
+import { type FC } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,13 @@ interface MessageCardProps {
   likes?: number;
   replies?: number;
   reposts?: number;
+  onLike?: () => void;
+  onReply?: () => void;
+  onRepost?: () => void;
+  onShare?: () => void;
 }
 
-const MessageCard = ({
+const MessageCard: FC<MessageCardProps> = ({
   avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
   username = "JohnDoe",
   timestamp = "5m ago",
@@ -28,12 +32,20 @@ const MessageCard = ({
   likes = 42,
   replies = 12,
   reposts = 5,
-}: MessageCardProps) => {
+  onLike,
+  onReply,
+  onRepost,
+  onShare,
+}) => {
   return (
     <Card className="w-[600px] p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
       <div className="flex gap-4">
         <Avatar className="h-12 w-12">
-          <img src={avatar} alt={username} className="object-cover" />
+          <img
+            src={avatar}
+            alt={`${username}'s avatar`}
+            className="object-cover"
+          />
         </Avatar>
 
         <div className="flex-1">
@@ -52,6 +64,7 @@ const MessageCard = ({
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-2"
+                    onClick={onLike}
                   >
                     <Heart className="h-4 w-4" />
                     <span className="text-sm">{likes}</span>
@@ -68,6 +81,7 @@ const MessageCard = ({
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-2"
+                    onClick={onReply}
                   >
                     <MessageCircle className="h-4 w-4" />
                     <span className="text-sm">{replies}</span>
@@ -84,6 +98,7 @@ const MessageCard = ({
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-2"
+                    onClick={onRepost}
                   >
                     <Repeat2 className="h-4 w-4" />
                     <span className="text-sm">{reposts}</span>
@@ -96,7 +111,7 @@ const MessageCard = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={onShare}>
                     <Share className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
