@@ -1,4 +1,4 @@
-import { type FC, useState } from "react";
+import { type FC, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { api } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ComposeModalProps {
   open?: boolean;
   onClose?: () => void;
-  onSubmit?: (content: string, media: string[]) => Promise<void>;
   maxLength?: number;
   maxMedia?: number;
 }
@@ -22,27 +23,33 @@ interface ComposeModalProps {
 const ComposeModal: FC<ComposeModalProps> = ({
   open = true,
   onClose = () => {},
-  onSubmit = async () => {},
   maxLength = 280,
   maxMedia = 4,
 }) => {
   const [content, setContent] = useState("");
-  const [media, setMedia] = useState<string[]>([
-    "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=500&auto=format",
-  ]);
+  const [media, setMedia] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || !content.trim()) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(content, media);
+      await api.messages.create(content.trim(), media[0]);
       setContent("");
       setMedia([]);
       onClose();
+      toast({
+        description: "Message posted successfully",
+      });
     } catch (error) {
       console.error("Error submitting message:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to post message",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -52,13 +59,16 @@ const ComposeModal: FC<ComposeModalProps> = ({
     setMedia(media.filter((_, i) => i !== index));
   };
 
-  const addMedia = () => {
+  const addMedia = useCallback(() => {
     if (media.length >= maxMedia) return;
+
+    // For demo purposes, adding a placeholder image
+    // In production, this would open a file picker
     setMedia([
       ...media,
-      "https://images.unsplash.com/photo-1682687220742-aba13b6e50ba?w=500&auto=format",
+      `https://source.unsplash.com/random/800x600?sig=${Date.now()}`,
     ]);
-  };
+  }, [media, maxMedia]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -77,7 +87,9 @@ const ComposeModal: FC<ComposeModalProps> = ({
           />
 
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-500">
+            <span
+              className={`${content.length > maxLength * 0.9 ? "text-red-500" : "text-gray-500"}`}
+            >
               {content.length}/{maxLength} characters
             </span>
           </div>
@@ -110,19 +122,19 @@ const ComposeModal: FC<ComposeModalProps> = ({
             variant="ghost"
             size="icon"
             onClick={addMedia}
-            disabled={media.length >= maxMedia}
+            disabled={media.length >= maxMedia || isSubmitting}
           >
             <ImagePlus className="h-5 w-5" />
           </Button>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={
-                isSubmitting || (content.length === 0 && media.length === 0)
+                isSubmitting || !content.trim() || content.length > maxLength
               }
             >
               {isSubmitting ? "Posting..." : "Post"}

@@ -30,47 +30,33 @@ interface MessageCardProps {
   replies?: number;
   reposts?: number;
   onLike?: () => void;
-<<<<<<< HEAD
-  onReply?: () => void;
   onRepost?: () => void;
-  onShare?: () => void;
-=======
-  onRepost?: () => void;
->>>>>>> 12e6c8fa4bb6ed453c741848e1b37f4f6a3639b7
 }
 
 const MessageCard: FC<MessageCardProps> = ({
   avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=default",
-  username = "JohnDoe",
-  timestamp = "5m ago",
-  content = "This is a sample message showing how the card looks with some default content.",
-<<<<<<< HEAD
-  likes = 42,
-  replies = 12,
-  reposts = 5,
-  onLike,
-  onReply,
-  onRepost,
-  onShare,
-}) => {
-=======
+  username = "Anonymous",
+  timestamp = "Just now",
+  content = "",
   likes = 0,
   replies = 0,
   reposts = 0,
   onLike,
   onRepost,
-}: MessageCardProps) => {
+}) => {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReplyOpen, setIsReplyOpen] = useState(false);
   const { toast } = useToast();
 
   const handleReplySubmit = async () => {
-    if (!replyContent.trim()) return;
+    if (!replyContent.trim() || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
       await api.messages.reply(content, replyContent);
       setReplyContent("");
+      setIsReplyOpen(false);
       toast({
         description: "Reply posted successfully",
       });
@@ -103,26 +89,19 @@ const MessageCard: FC<MessageCardProps> = ({
     }
   };
 
->>>>>>> 12e6c8fa4bb6ed453c741848e1b37f4f6a3639b7
   return (
     <Card className="w-[600px] p-4 bg-white hover:bg-gray-50 transition-colors">
       <div className="flex gap-4">
         <Avatar className="h-12 w-12">
-<<<<<<< HEAD
           <img
             src={avatar}
-            alt={`${username}'s avatar`}
-            className="object-cover"
-=======
-          <img 
-            src={avatar} 
-            alt={username} 
+            alt={username}
             className="object-cover"
             onError={(e) => {
               const img = e.target as HTMLImageElement;
-              img.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback";
+              img.src =
+                "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback";
             }}
->>>>>>> 12e6c8fa4bb6ed453c741848e1b37f4f6a3639b7
           />
         </Avatar>
 
@@ -154,17 +133,7 @@ const MessageCard: FC<MessageCardProps> = ({
               </Tooltip>
             </TooltipProvider>
 
-<<<<<<< HEAD
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={onReply}
-=======
-            <Dialog>
+            <Dialog open={isReplyOpen} onOpenChange={setIsReplyOpen}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -197,10 +166,9 @@ const MessageCard: FC<MessageCardProps> = ({
                     onChange={(e) => setReplyContent(e.target.value)}
                     className="min-h-[100px]"
                   />
-                  <Button 
+                  <Button
                     onClick={handleReplySubmit}
                     disabled={isSubmitting || !replyContent.trim()}
->>>>>>> 12e6c8fa4bb6ed453c741848e1b37f4f6a3639b7
                   >
                     {isSubmitting ? "Posting..." : "Post Reply"}
                   </Button>
@@ -228,15 +196,7 @@ const MessageCard: FC<MessageCardProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-<<<<<<< HEAD
-                  <Button variant="ghost" size="sm" onClick={onShare}>
-=======
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleShare}
-                  >
->>>>>>> 12e6c8fa4bb6ed453c741848e1b37f4f6a3639b7
+                  <Button variant="ghost" size="sm" onClick={handleShare}>
                     <Share className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
