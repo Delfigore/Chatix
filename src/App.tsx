@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/home";
 import LoginForm from "./components/auth/LoginForm";
 import SignUpForm from "./components/auth/SignUpForm";
 import VerifyEmail from "./components/auth/VerifyEmail";
 import { AuthProvider, useAuth } from "./lib/auth";
-import routes from "tempo-routes";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -86,10 +85,7 @@ function App() {
             </div>
           }
         >
-          <>
-            <AppRoutes />
-            {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-          </>
+          <AppRoutes />
         </Suspense>
       </AuthProvider>
     </ErrorBoundary>
